@@ -6,19 +6,38 @@
 mvn test
 mvn package
 java -jar target/miku-docx2md-0.9.0.jar --version
+scripts/compare-node-java-cli.sh
 ```
+
+## Release Assets
+
+`.github/workflows/release-cli-runtime.yml` builds the Maven package from a
+`v*` tag or manual `tag_name`, verifies the runtime jar with Java 8 using
+`--version`, and uploads the runtime jar plus sources jar to the GitHub Release.
+
+## Maven Plugin Scope
+
+Maven plugin support remains out of the initial straight-conversion scope. Add
+it later only as an explicit Java-side extension for build-time conversion.
 
 Focused tests:
 
 ```bash
 mvn test -Dtest=MikuDocx2mdCoreTest
 mvn test -Dtest=MikuDocx2mdCliTest
+mvn test -Dtest=MikuDocx2mdFixtureParityTest
 ```
 
 ## Local Workspace
 
 Use `workplace/` for temporary upstream clones, generated comparison output,
 and extracted archives. Only `workplace/.gitkeep` is tracked.
+
+`scripts/compare-node-java-cli.sh` writes Node-vs-Java CLI metadata, usage
+error output, verbose diagnostics, generated Markdown, summary files, stdout
+Markdown, mixed summary/Markdown stdout, debug Markdown,
+`--include-unsupported-comments` Markdown, asset directories, manifests, and
+diffs under `workplace/node-java-cli/`.
 
 ## Upstream Maintenance Flow
 

@@ -9,7 +9,11 @@ final class AssetManifest {
 
     static String createAssetsManifestText(List<ParsedImageAsset> assets) {
         StringBuilder builder = new StringBuilder();
-        builder.append("{\n  \"assets\": [");
+        builder.append("{\n  \"version\": 1,\n  \"assets\": [");
+        if (assets.isEmpty()) {
+            builder.append("]\n}");
+            return builder.toString();
+        }
         for (int index = 0; index < assets.size(); index++) {
             ParsedImageAsset asset = assets.get(index);
             if (index > 0) {
@@ -20,17 +24,17 @@ final class AssetManifest {
             builder.append("\n      \"sourcePath\": \"").append(json(asset.sourcePath)).append("\",");
             builder.append("\n      \"mediaType\": \"").append(json(asset.mediaType)).append("\",");
             builder.append("\n      \"altText\": \"").append(json(asset.altText)).append("\",");
-            builder.append("\n      \"byteSize\": ").append(asset.bytes == null ? 0 : asset.bytes.length).append(',');
             builder.append("\n      \"sourceTrace\": \"").append(json(asset.sourceTrace)).append("\",");
             builder.append("\n      \"blockIndex\": ").append(asset.blockIndex).append(',');
             builder.append("\n      \"documentPosition\": {");
             builder.append("\n        \"blockIndex\": ").append(asset.blockIndex).append(',');
             builder.append("\n        \"blockKind\": \"").append(json(asset.blockKind)).append("\",");
             builder.append("\n        \"traceIndex\": ").append(asset.traceIndex);
-            builder.append("\n      }");
+            builder.append("\n      },");
+            builder.append("\n      \"size\": ").append(asset.bytes == null ? 0 : asset.bytes.length);
             builder.append("\n    }");
         }
-        builder.append("\n  ]\n}\n");
+        builder.append("\n  ]\n}");
         return builder.toString();
     }
 

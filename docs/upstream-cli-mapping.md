@@ -16,11 +16,22 @@
 ## Stdout And Stderr
 
 - Markdown goes to stdout when `--out` is omitted.
+- Markdown stdout uses the upstream raw-write behavior and does not add an
+  extra trailing newline.
 - Markdown is written to the specified file when `--out` is present.
 - `--summary` writes summary text to stdout.
+- If `--summary` is used without `--out`, summary text is printed first,
+  followed by Markdown on the same stdout stream.
 - `--summary-out` writes summary text to a file.
 - `--verbose` writes diagnostics to stderr with the `verbose:` prefix.
+- Verbose diagnostics include input, output, summary, assets, byte count,
+  parsed block / asset counts, written outputs, and total elapsed time.
+- `--help` returns exit code `0`.
+- Missing input prints help and returns exit code `1`.
 - Usage and runtime failures return exit code `1`.
+- Read failures use the `read failed` stage.
+- Output failures use `markdown write failed`, `summary write failed`, or
+  `asset write failed` according to the output path.
 
 ## Known Runtime Differences
 

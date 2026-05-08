@@ -55,6 +55,10 @@ relationships, styles, numbering, Markdown rendering, image asset extraction,
 summary text, and CLI file output. Browser UI behavior from upstream is out of
 scope for this Java repository.
 
+GitHub Release asset workflow support is provided by
+`.github/workflows/release-cli-runtime.yml`. It builds from `v*` tags or manual
+`tag_name` dispatch and uploads the runtime jar plus sources jar.
+
 ## Upstream And Sister Reference
 
 - Upstream Node.js / TypeScript repository: <https://github.com/igapyon/miku-docx2md>
