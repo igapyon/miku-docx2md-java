@@ -4,7 +4,7 @@ set -eu
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 UPSTREAM_DIR="${MIKU_DOCX2MD_UPSTREAM_DIR:-${ROOT_DIR}/../miku-docx2md}"
 WORK_DIR="${ROOT_DIR}/workplace/node-java-cli"
-JAVA_JAR="${ROOT_DIR}/target/miku-docx2md-0.9.0.jar"
+JAVA_JAR="${ROOT_DIR}/miku-docx2md/target/miku-docx2md-0.9.0.jar"
 
 (cd "${ROOT_DIR}" && mvn -q -DskipTests package)
 
@@ -47,6 +47,10 @@ normalize_help() {
   sed 's#node scripts/miku-docx2md-cli.mjs#java -jar miku-docx2md-0.9.0.jar#g'
 }
 
+normalize_java_help() {
+  awk '/^JAVA EXTENSIONS$/ { skip = 1; next } /^OUTPUTS$/ { skip = 0 } !skip { print }'
+}
+
 normalize_verbose() {
   sed -E "s#${WORK_DIR}/(node|java)#${WORK_DIR}/<side>#g; s/verbose: \+[0-9]+ms/verbose: +<ms>ms/g; s/done total-ms=[0-9]+/done total-ms=<ms>/g"
 }
@@ -59,13 +63,13 @@ java -jar "${JAVA_JAR}" --version > "${WORK_DIR}/java/version.stdout"
 compare_file "version stdout" "${WORK_DIR}/node/version.stdout" "${WORK_DIR}/java/version.stdout" "${WORK_DIR}/version.stdout.diff" || compare_metadata_status=1
 
 (cd "${UPSTREAM_DIR}" && node scripts/miku-docx2md-cli.mjs --help) | normalize_help > "${WORK_DIR}/node/help.stdout"
-java -jar "${JAVA_JAR}" --help > "${WORK_DIR}/java/help.stdout"
+java -jar "${JAVA_JAR}" --help | normalize_java_help > "${WORK_DIR}/java/help.stdout"
 compare_file "help stdout" "${WORK_DIR}/node/help.stdout" "${WORK_DIR}/java/help.stdout" "${WORK_DIR}/help.stdout.diff" || compare_metadata_status=1
 
 set +e
 (cd "${UPSTREAM_DIR}" && node scripts/miku-docx2md-cli.mjs > "${WORK_DIR}/node/missing-input.stdout" 2> "${WORK_DIR}/node/missing-input.stderr")
 node_missing_status=$?
-java -jar "${JAVA_JAR}" > "${WORK_DIR}/java/missing-input.stdout" 2> "${WORK_DIR}/java/missing-input.stderr"
+java -jar "${JAVA_JAR}" > "${WORK_DIR}/java/missing-input.raw.stdout" 2> "${WORK_DIR}/java/missing-input.stderr"
 java_missing_status=$?
 (cd "${UPSTREAM_DIR}" && node scripts/miku-docx2md-cli.mjs sample.docx --unknown > "${WORK_DIR}/node/unknown-option.stdout" 2> "${WORK_DIR}/node/unknown-option.stderr")
 node_unknown_status=$?
@@ -75,14 +79,11 @@ java_unknown_status=$?
 node_missing_value_status=$?
 java -jar "${JAVA_JAR}" sample.docx --out > "${WORK_DIR}/java/missing-option-value.stdout" 2> "${WORK_DIR}/java/missing-option-value.stderr"
 java_missing_value_status=$?
-(cd "${UPSTREAM_DIR}" && node scripts/miku-docx2md-cli.mjs first.docx second.docx > "${WORK_DIR}/node/multiple-inputs.stdout" 2> "${WORK_DIR}/node/multiple-inputs.stderr")
-node_multiple_status=$?
-java -jar "${JAVA_JAR}" first.docx second.docx > "${WORK_DIR}/java/multiple-inputs.stdout" 2> "${WORK_DIR}/java/multiple-inputs.stderr"
-java_multiple_status=$?
 set -e
 
 normalize_help < "${WORK_DIR}/node/missing-input.stdout" > "${WORK_DIR}/node/missing-input.normalized.stdout"
 mv "${WORK_DIR}/node/missing-input.normalized.stdout" "${WORK_DIR}/node/missing-input.stdout"
+normalize_java_help < "${WORK_DIR}/java/missing-input.raw.stdout" > "${WORK_DIR}/java/missing-input.stdout"
 
 compare_status "missing input" "${node_missing_status}" "${java_missing_status}" "${WORK_DIR}/missing-input.status.diff" || compare_metadata_status=1
 compare_file "missing input stdout" "${WORK_DIR}/node/missing-input.stdout" "${WORK_DIR}/java/missing-input.stdout" "${WORK_DIR}/missing-input.stdout.diff" || compare_metadata_status=1
@@ -93,10 +94,6 @@ compare_file "unknown option stderr" "${WORK_DIR}/node/unknown-option.stderr" "$
 compare_status "missing option value" "${node_missing_value_status}" "${java_missing_value_status}" "${WORK_DIR}/missing-option-value.status.diff" || compare_metadata_status=1
 compare_file "missing option value stdout" "${WORK_DIR}/node/missing-option-value.stdout" "${WORK_DIR}/java/missing-option-value.stdout" "${WORK_DIR}/missing-option-value.stdout.diff" || compare_metadata_status=1
 compare_file "missing option value stderr" "${WORK_DIR}/node/missing-option-value.stderr" "${WORK_DIR}/java/missing-option-value.stderr" "${WORK_DIR}/missing-option-value.stderr.diff" || compare_metadata_status=1
-compare_status "multiple inputs" "${node_multiple_status}" "${java_multiple_status}" "${WORK_DIR}/multiple-inputs.status.diff" || compare_metadata_status=1
-compare_file "multiple inputs stdout" "${WORK_DIR}/node/multiple-inputs.stdout" "${WORK_DIR}/java/multiple-inputs.stdout" "${WORK_DIR}/multiple-inputs.stdout.diff" || compare_metadata_status=1
-compare_file "multiple inputs stderr" "${WORK_DIR}/node/multiple-inputs.stderr" "${WORK_DIR}/java/multiple-inputs.stderr" "${WORK_DIR}/multiple-inputs.stderr.diff" || compare_metadata_status=1
-
 if [ "${compare_metadata_status}" -eq 0 ]; then
   echo "ok cli-metadata"
 else
@@ -104,7 +101,7 @@ else
 fi
 
 if [ "$#" -eq 0 ]; then
-  set -- "${ROOT_DIR}"/src/test/resources/docx/*.docx
+  set -- "${ROOT_DIR}"/miku-docx2md/src/test/resources/docx/*.docx
 fi
 
 for input in "$@"; do

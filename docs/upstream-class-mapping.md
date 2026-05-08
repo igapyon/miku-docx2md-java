@@ -23,6 +23,7 @@
 | `src/ts/summary.ts`, `src/ts/document-summary.ts` | `jp.igapyon.mikudocx2md.model.ParsedSummary` | Preserves summary field names and text order. |
 | `src/ts/asset-manifest.ts` | `jp.igapyon.mikudocx2md.core.AssetManifest` | Preserves image manifest contract. |
 | `scripts/miku-docx2md-cli.mjs` | `jp.igapyon.mikudocx2md.cli.MikuDocx2mdCli`, `CliOptions` | Preserves CLI options, stdout/stderr roles, and exit codes. |
+| Java-side Maven plugin extension | `jp.igapyon.mikudocx2md.mavenplugin.MikuDocx2mdMojo`, `ConvertDirectoryMojo` | Sister-aligned build-time adapters for single-file and directory conversion. |
 
 Browser-only files such as `src/ts/main.ts`, `browser-zip.ts`, and
 `browser-assets-export.ts` are out of scope for the Java runtime.

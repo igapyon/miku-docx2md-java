@@ -13,15 +13,15 @@
       <outputDirectory>/</outputDirectory>
     </file>
     <file>
-      <source>README.md</source>
+      <source>../README.md</source>
       <outputDirectory>/</outputDirectory>
     </file>
     <file>
-      <source>LICENSE</source>
+      <source>../LICENSE</source>
       <outputDirectory>/</outputDirectory>
     </file>
     <file>
-      <source>docs/upstream-cli-mapping.md</source>
+      <source>../docs/upstream-cli-mapping.md</source>
       <outputDirectory>/docs</outputDirectory>
     </file>
   </files>

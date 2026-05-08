@@ -5,6 +5,11 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Stream;
 import jp.igapyon.mikudocx2md.core.MarkdownOptions;
 import jp.igapyon.mikudocx2md.core.MikuDocx2mdCore;
 import jp.igapyon.mikudocx2md.model.ParsedDocx;
@@ -36,9 +41,12 @@ public class MikuDocx2mdCli {
             printHelp(out);
             return 0;
         }
-        if (options.inputPath == null) {
+        if (options.inputPath == null && options.inputDirectory == null && options.inputPaths.isEmpty()) {
             printHelp(out);
             return 1;
+        }
+        if (isBatchMode(options)) {
+            return runBatch(options, err, startedAt);
         }
 
         Verbose verbose = new Verbose(options.verbose, startedAt, err);
@@ -108,24 +116,201 @@ public class MikuDocx2mdCli {
         }
     }
 
-    private MarkdownOptions.ImagePathResolver createImagePathResolver(final CliOptions options) {
+    private int runBatch(CliOptions options, PrintStream err, long startedAt) {
+        if (options.outPath != null || options.summary || options.summaryOutPath != null) {
+            err.println("--out, --summary, and --summary-out are not available with multiple input files or --input-directory.");
+            return 1;
+        }
+        final List<Path> inputFiles;
+        try {
+            inputFiles = collectBatchInputs(options);
+        } catch (IOException ex) {
+            err.println("input scan failed: " + ex.getMessage());
+            return 1;
+        } catch (IllegalArgumentException ex) {
+            err.println(ex.getMessage());
+            return 1;
+        }
+        if (inputFiles.isEmpty()) {
+            Path inputDirectory = options.inputDirectory == null ? null : Paths.get(options.inputDirectory);
+            err.println("No .docx files found under " + (inputDirectory == null ? "input files" : inputDirectory));
+            return 1;
+        }
+
+        Verbose verbose = new Verbose(options.verbose, startedAt, err);
+        int converted = 0;
+        for (Path inputFile : inputFiles) {
+            Path outputFile = resolveBatchOutputPath(options, inputFile);
+            Path assetsDir = resolveBatchAssetsDir(options, inputFile, outputFile);
+            verbose.log("batch-input=" + inputFile);
+            verbose.log("batch-output=" + outputFile);
+            if (assetsDir != null) {
+                verbose.log("batch-assets=" + assetsDir);
+            }
+            int status = convertSingleFile(inputFile.toString(), outputFile, null, assetsDir, options.includeUnsupportedComments, err, verbose);
+            if (status != 0) {
+                return status;
+            }
+            converted++;
+        }
+        verbose.log("batch-written count=" + converted);
+        verbose.log("done total-ms=" + (System.currentTimeMillis() - startedAt));
+        return 0;
+    }
+
+    private int convertSingleFile(String inputPath, Path outPath, Path summaryOutPath, Path assetsDir, boolean includeUnsupportedComments,
+            PrintStream err, Verbose verbose) {
+        verbose.log("input=" + inputPath);
+        verbose.log("output=" + (outPath == null ? "stdout" : outPath));
+        verbose.log("summary=" + (summaryOutPath == null ? "disabled" : summaryOutPath));
+        verbose.log("assets=" + (assetsDir == null ? "disabled" : assetsDir));
+        byte[] bytes;
+        try {
+            bytes = Files.readAllBytes(Paths.get(inputPath));
+        } catch (IOException ex) {
+            err.println(formatDocumentError(inputPath, "read failed", ex));
+            return 1;
+        }
+        verbose.log("input-bytes=" + bytes.length);
+
+        try {
+            MikuDocx2mdCore core = new MikuDocx2mdCore();
+            ParsedDocx parsed = core.parseDocx(bytes);
+            verbose.log("parsed blocks=" + parsed.blocks.size() + " assets=" + parsed.assets.size());
+            MarkdownOptions markdownOptions = new MarkdownOptions();
+            markdownOptions.includeUnsupportedComments = includeUnsupportedComments;
+            markdownOptions.imagePathResolver = createImagePathResolver(outPath, assetsDir);
+            String markdown = core.renderMarkdown(parsed, markdownOptions);
+            String summary = core.createSummaryText(parsed);
+
+            if (assetsDir != null) {
+                try {
+                    writeAssets(assetsDir, parsed, core);
+                } catch (IOException ex) {
+                    err.println(formatDocumentError(inputPath, "asset write failed", ex));
+                    return 1;
+                }
+                verbose.log("assets-written count=" + parsed.assets.size());
+            }
+            if (summaryOutPath != null) {
+                try {
+                    writeText(summaryOutPath, summary);
+                } catch (IOException ex) {
+                    err.println(formatDocumentError(inputPath, "summary write failed", ex));
+                    return 1;
+                }
+                verbose.log("summary-written " + summaryOutPath);
+            }
+            if (outPath != null) {
+                try {
+                    writeText(outPath, markdown);
+                } catch (IOException ex) {
+                    err.println(formatDocumentError(inputPath, "markdown write failed", ex));
+                    return 1;
+                }
+                verbose.log("markdown-written " + outPath);
+            }
+            return 0;
+        } catch (RuntimeException ex) {
+            err.println(formatDocumentError(inputPath, "parse failed", ex));
+            return 1;
+        }
+    }
+
+    private boolean isBatchMode(CliOptions options) {
+        return options.inputDirectory != null || options.inputPaths.size() > 1;
+    }
+
+    private List<Path> collectBatchInputs(CliOptions options) throws IOException {
+        if (options.inputDirectory != null && !options.inputPaths.isEmpty()) {
+            throw new IllegalArgumentException("--input-directory cannot be combined with positional input files.");
+        }
+        List<Path> inputs = new ArrayList<Path>();
+        if (options.inputDirectory != null) {
+            Path inputDirectory = Paths.get(options.inputDirectory);
+            if (!Files.isDirectory(inputDirectory)) {
+                throw new IllegalArgumentException("Input directory does not exist: " + inputDirectory);
+            }
+            int maxDepth = options.recursive ? Integer.MAX_VALUE : 1;
+            try (Stream<Path> stream = Files.walk(inputDirectory, maxDepth)) {
+                java.util.Iterator<Path> iterator = stream.iterator();
+                while (iterator.hasNext()) {
+                    Path candidate = iterator.next();
+                    if (Files.isRegularFile(candidate) && candidate.getFileName().toString().toLowerCase().endsWith(".docx")) {
+                        inputs.add(candidate);
+                    }
+                }
+            }
+        } else {
+            for (String inputPath : options.inputPaths) {
+                inputs.add(Paths.get(inputPath));
+            }
+        }
+        Collections.sort(inputs, new Comparator<Path>() {
+            @Override
+            public int compare(Path left, Path right) {
+                return left.toString().compareTo(right.toString());
+            }
+        });
+        return inputs;
+    }
+
+    private Path resolveBatchOutputPath(CliOptions options, Path inputFile) {
+        String outputName = stripDocxExtension(inputFile.getFileName().toString()) + ".md";
+        if (options.outputDirectory == null) {
+            Path parent = inputFile.getParent();
+            return parent == null ? Paths.get(outputName) : parent.resolve(outputName);
+        }
+        Path outputDirectory = Paths.get(options.outputDirectory);
+        if (options.inputDirectory == null) {
+            return outputDirectory.resolve(outputName);
+        }
+        Path relative = Paths.get(options.inputDirectory).toAbsolutePath().normalize().relativize(inputFile.toAbsolutePath().normalize());
+        Path relativeParent = relative.getParent();
+        return relativeParent == null ? outputDirectory.resolve(outputName) : outputDirectory.resolve(relativeParent).resolve(outputName);
+    }
+
+    private Path resolveBatchAssetsDir(CliOptions options, Path inputFile, Path outputFile) {
         if (options.assetsDir == null) {
+            return null;
+        }
+        Path assetsRoot = Paths.get(options.assetsDir);
+        String assetsName = stripDocxExtension(inputFile.getFileName().toString()) + ".assets";
+        if (options.inputDirectory == null) {
+            return assetsRoot.resolve(assetsName);
+        }
+        Path relative = Paths.get(options.inputDirectory).toAbsolutePath().normalize().relativize(inputFile.toAbsolutePath().normalize());
+        Path relativeParent = relative.getParent();
+        return relativeParent == null ? assetsRoot.resolve(assetsName) : assetsRoot.resolve(relativeParent).resolve(assetsName);
+    }
+
+    private String stripDocxExtension(String fileName) {
+        return fileName.toLowerCase().endsWith(".docx") ? fileName.substring(0, fileName.length() - 5) : fileName;
+    }
+
+    private MarkdownOptions.ImagePathResolver createImagePathResolver(final Path outPath, final Path assetsDir) {
+        if (assetsDir == null) {
             return null;
         }
         return new MarkdownOptions.ImagePathResolver() {
             @Override
             public String resolve(String sourcePath) {
-                if (options.outPath == null) {
+                if (outPath == null) {
                     return sourcePath;
                 }
-                Path outParent = Paths.get(options.outPath).toAbsolutePath().getParent();
-                Path asset = Paths.get(options.assetsDir).toAbsolutePath().resolve(sourcePath);
+                Path outParent = outPath.toAbsolutePath().getParent();
+                Path asset = assetsDir.toAbsolutePath().resolve(sourcePath);
                 if (outParent == null) {
                     return sourcePath;
                 }
                 return outParent.relativize(asset).toString().replace('\\', '/');
             }
         };
+    }
+
+    private MarkdownOptions.ImagePathResolver createImagePathResolver(final CliOptions options) {
+        return createImagePathResolver(options.outPath == null ? null : Paths.get(options.outPath),
+                options.assetsDir == null ? null : Paths.get(options.assetsDir));
     }
 
     private void writeAssets(Path assetsDir, ParsedDocx parsed, MikuDocx2mdCore core) throws IOException {
@@ -210,6 +395,20 @@ public class MikuDocx2mdCli {
         out.println();
         out.println("  --help");
         out.println("      Show this help, then exit.");
+        out.println();
+        out.println("JAVA EXTENSIONS");
+        out.println("  Multiple positional input files are converted as a batch.");
+        out.println("  Batch conversion writes Markdown next to each input file, or under");
+        out.println("  --output-directory when it is provided.");
+        out.println();
+        out.println("  --input-directory <dir>");
+        out.println("      Convert .docx files under this directory.");
+        out.println();
+        out.println("  --output-directory <dir>");
+        out.println("      Write batch Markdown files under this directory.");
+        out.println();
+        out.println("  --recursive");
+        out.println("      Recursively scan --input-directory.");
         out.println();
         out.println("OUTPUTS");
         out.println("  Markdown:");

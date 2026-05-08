@@ -2,7 +2,7 @@
 
 | Upstream Node CLI | Java CLI |
 | --- | --- |
-| `node scripts/miku-docx2md-cli.mjs <input.docx>` | `java -jar target/miku-docx2md-0.9.0.jar <input.docx>` |
+| `node scripts/miku-docx2md-cli.mjs <input.docx>` | `java -jar miku-docx2md/target/miku-docx2md-0.9.0.jar <input.docx>` |
 | `--out <file>` | `--out <file>` |
 | `--assets-dir <dir>` | `--assets-dir <dir>` |
 | `--summary` | `--summary` |
@@ -12,6 +12,18 @@
 | `--verbose` | `--verbose` |
 | `--version` | `--version` |
 | `--help` | `--help` |
+
+## Java-Side Extensions
+
+These options intentionally follow the closest sister project
+`workplace/miku-xlsx2md-java-devel` and extend beyond the upstream Node CLI.
+
+| Java CLI extension | Purpose |
+| --- | --- |
+| multiple positional `.docx` files | Convert several input files in one command. |
+| `--input-directory <dir>` | Convert `.docx` files under a directory. |
+| `--output-directory <dir>` | Write batch Markdown files under a directory. |
+| `--recursive` | Recursively scan `--input-directory`. |
 
 ## Stdout And Stderr
 
