@@ -82,15 +82,48 @@ class MikuDocx2mdCliTest {
     }
 
     @Test
-    void rejectsMultipleInputFiles() {
+    void writesMultipleInputFilesToOutputDirectory() throws IOException {
+        Path first = copyResourceToTemp("/docx/word-bullet-list-basic.docx", "first.docx");
+        Path second = copyResourceToTemp("/docx/word-headings-basic.docx", "second.docx");
+        Path outputDirectory = tempDir.resolve("multi-output");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
 
-        int status = new MikuDocx2mdCli().run(new String[] {"first.docx", "second.docx"}, new PrintStream(out), new PrintStream(err));
+        int status = new MikuDocx2mdCli().run(
+                new String[] {first.toString(), second.toString(), "--output-directory", outputDirectory.toString()},
+                new PrintStream(out),
+                new PrintStream(err));
 
-        assertEquals(1, status);
+        assertEquals(0, status);
         assertEquals("", out.toString());
-        assertTrue(err.toString().contains("Specify exactly one input .docx file."), err.toString());
+        assertEquals("", err.toString());
+        assertTrue(Files.exists(outputDirectory.resolve("first.md")));
+        assertTrue(Files.exists(outputDirectory.resolve("second.md")));
+    }
+
+    @Test
+    void writesInputDirectoryToOutputDirectory() throws IOException {
+        Path inputDirectory = tempDir.resolve("input-dir");
+        Files.createDirectories(inputDirectory);
+        Files.write(inputDirectory.resolve("word-bullet-list-basic.docx"), readBytesResource("/docx/word-bullet-list-basic.docx"));
+        Files.write(inputDirectory.resolve("word-headings-basic.docx"), readBytesResource("/docx/word-headings-basic.docx"));
+        Path outputDirectory = tempDir.resolve("directory-output");
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+
+        int status = new MikuDocx2mdCli().run(
+                new String[] {
+                        "--input-directory", inputDirectory.toString(),
+                        "--output-directory", outputDirectory.toString()
+                },
+                new PrintStream(out),
+                new PrintStream(err));
+
+        assertEquals(0, status);
+        assertEquals("", out.toString());
+        assertEquals("", err.toString());
+        assertTrue(Files.exists(outputDirectory.resolve("word-bullet-list-basic.md")));
+        assertTrue(Files.exists(outputDirectory.resolve("word-headings-basic.md")));
     }
 
     @Test

@@ -5,7 +5,7 @@
 ```bash
 mvn test
 mvn package
-java -jar target/miku-docx2md-0.9.0.jar --version
+java -jar miku-docx2md/target/miku-docx2md-0.9.0.jar --version
 scripts/compare-node-java-cli.sh
 ```
 
@@ -13,12 +13,14 @@ scripts/compare-node-java-cli.sh
 
 `.github/workflows/release-cli-runtime.yml` builds the Maven package from a
 `v*` tag or manual `tag_name`, verifies the runtime jar with Java 8 using
-`--version`, and uploads the runtime jar plus sources jar to the GitHub Release.
+`--version`, and uploads the runtime jar plus sources jar from the
+`miku-docx2md` runtime module to the GitHub Release.
 
 ## Maven Plugin Scope
 
-Maven plugin support remains out of the initial straight-conversion scope. Add
-it later only as an explicit Java-side extension for build-time conversion.
+Maven plugin support is now an explicit Java-side extension aligned with the
+closest sister project `workplace/miku-xlsx2md-java-devel`. The plugin module
+provides `convert` and `convert-directory` goals.
 
 Focused tests:
 
@@ -26,6 +28,7 @@ Focused tests:
 mvn test -Dtest=MikuDocx2mdCoreTest
 mvn test -Dtest=MikuDocx2mdCliTest
 mvn test -Dtest=MikuDocx2mdFixtureParityTest
+mvn -pl miku-docx2md-maven-plugin -am -Dtest=MikuDocx2mdMojoTest test
 ```
 
 ## Local Workspace

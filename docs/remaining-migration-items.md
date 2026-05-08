@@ -15,7 +15,8 @@
 - upstream `.docx` fixture expected summary parity tests
 - Node-vs-Java CLI comparison script for CLI metadata, usage errors, verbose diagnostics, Markdown, summary, stdout Markdown, mixed summary/Markdown stdout, debug Markdown, `--include-unsupported-comments` Markdown, manifest, and asset files
 - GitHub Release CLI runtime workflow for jar and sources jar assets
-- Maven plugin scope decision: remains out of initial straight-conversion scope
+- Maven plugin module with `convert` and `convert-directory` goals
+- CLI batch conversion for multiple positional files and `--input-directory`
 - upstream class, CLI, and test mapping documents
 
 ## Pending
@@ -24,7 +25,7 @@ No active initial straight-conversion items.
 
 ## Follow-up Candidates
 
-- Add Maven plugin support only when build-time DOCX to Markdown conversion becomes an explicit Java-side extension request.
+- Broaden Maven plugin smoke coverage if additional real-world DOCX fixtures are added.
 
 ## Latest Verification
 
@@ -37,6 +38,6 @@ scripts/compare-node-java-cli.sh
 
 Latest checked on 2026-05-09:
 
-- `mvn test`: 43 tests passed, including expected Markdown and summary parity for 9 upstream fixtures.
+- `mvn test`: 46 tests passed, including expected Markdown and summary parity for 9 upstream fixtures and Maven plugin `convert` / `convert-directory` coverage.
 - `scripts/compare-node-java-cli.sh`: CLI metadata / usage errors passed, and all 9 upstream fixture verbose diagnostics, Markdown, summary, stdout Markdown, mixed summary/Markdown stdout, debug Markdown, `--include-unsupported-comments` Markdown, manifest, and asset comparisons passed.
-- `mvn package`: jar, sources jar, and distribution zip were generated.
+- `mvn package`: runtime jar, runtime sources jar, distribution zip, and Maven plugin jar were generated.
