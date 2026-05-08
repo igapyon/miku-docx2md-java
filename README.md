@@ -14,6 +14,7 @@ Build:
 ```bash
 mvn test
 mvn package
+sh scripts/smoke-maven-plugin.sh
 ```
 
 Run:
@@ -84,6 +85,11 @@ UI behavior from upstream is out of scope for this Java repository.
 GitHub Release asset workflow support is provided by
 `.github/workflows/release-cli-runtime.yml`. It builds from `v*` tags or manual
 `tag_name` dispatch and uploads the runtime jar plus sources jar.
+
+The Maven plugin full-coordinate smoke check is provided by
+`scripts/smoke-maven-plugin.sh`. It installs the local reactor artifacts, then
+exercises the `convert` and `convert-directory` goals through the plugin
+coordinate.
 
 ## Upstream And Sister Reference
 
