@@ -29,6 +29,7 @@
 | Upstream image fixtures produce one resolved image asset. | `MikuDocx2mdFixtureParityTest.imageFixtureAssetCountsStayAligned` | `mvn test -Dtest=MikuDocx2mdFixtureParityTest` |
 | Java-side Maven plugin converts a single DOCX file. | `MikuDocx2mdMojoTest.convertsSingleDocx` | `mvn -pl miku-docx2md-maven-plugin -am -Dtest=MikuDocx2mdMojoTest test` |
 | Java-side Maven plugin converts a DOCX directory. | `MikuDocx2mdMojoTest.convertsDirectory` | `mvn -pl miku-docx2md-maven-plugin -am -Dtest=MikuDocx2mdMojoTest test` |
+| Maven plugin full-coordinate execution works for single-file and directory goals. | `scripts/smoke-maven-plugin.sh` | `sh scripts/smoke-maven-plugin.sh` |
 
 ## Follow-up
 
