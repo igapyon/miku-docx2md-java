@@ -1,0 +1,12 @@
+paragraphs: 5
+headings: 0
+listItems: 0
+tables: 0
+images: 0
+imageAssets: 0
+drawingLikeUnsupported: 0
+links: 2
+internalLinks: 1
+externalLinks: 1
+unsupportedElements: 2
+unsupportedCommentTraces: 2
