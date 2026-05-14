@@ -24,10 +24,16 @@ focused on the runtime, CLI, core API, fixtures, and distribution artifacts.
 The separated Maven plugin repository owns plugin parameters, goals, examples,
 and plugin smoke verification.
 
+Runtime file and batch conversion behavior is exposed through
+`jp.igapyon.mikudocx2md.core.MikuDocx2mdFileConverter` and its options/result
+classes so CLI and separated build-tool adapters can share file I/O, asset,
+summary, and directory traversal behavior.
+
 Focused tests:
 
 ```bash
 mvn test -Dtest=MikuDocx2mdCoreTest
+mvn test -Dtest=MikuDocx2mdFileConverterTest
 mvn test -Dtest=MikuDocx2mdCliTest
 mvn test -Dtest=MikuDocx2mdFixtureParityTest
 ```
