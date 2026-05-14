@@ -4,7 +4,7 @@ set -eu
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 UPSTREAM_DIR="${MIKU_DOCX2MD_UPSTREAM_DIR:-${ROOT_DIR}/../miku-docx2md}"
 WORK_DIR="${ROOT_DIR}/workplace/node-java-cli"
-JAVA_JAR="${ROOT_DIR}/miku-docx2md/target/miku-docx2md-0.9.0.jar"
+JAVA_JAR="${ROOT_DIR}/target/miku-docx2md-1.0.0.jar"
 
 (cd "${ROOT_DIR}" && mvn -q -DskipTests package)
 
@@ -44,7 +44,11 @@ compare_status() {
 }
 
 normalize_help() {
-  sed 's#node scripts/miku-docx2md-cli.mjs#java -jar miku-docx2md-0.9.0.jar#g'
+  sed 's#node scripts/miku-docx2md-cli.mjs#java -jar miku-docx2md-1.0.0.jar#g'
+}
+
+normalize_version() {
+  sed 's/^miku-docx2md .*/miku-docx2md <version>/'
 }
 
 normalize_java_help() {
@@ -58,8 +62,8 @@ normalize_verbose() {
 status=0
 compare_metadata_status=0
 
-(cd "${UPSTREAM_DIR}" && node scripts/miku-docx2md-cli.mjs --version) > "${WORK_DIR}/node/version.stdout"
-java -jar "${JAVA_JAR}" --version > "${WORK_DIR}/java/version.stdout"
+(cd "${UPSTREAM_DIR}" && node scripts/miku-docx2md-cli.mjs --version) | normalize_version > "${WORK_DIR}/node/version.stdout"
+java -jar "${JAVA_JAR}" --version | normalize_version > "${WORK_DIR}/java/version.stdout"
 compare_file "version stdout" "${WORK_DIR}/node/version.stdout" "${WORK_DIR}/java/version.stdout" "${WORK_DIR}/version.stdout.diff" || compare_metadata_status=1
 
 (cd "${UPSTREAM_DIR}" && node scripts/miku-docx2md-cli.mjs --help) | normalize_help > "${WORK_DIR}/node/help.stdout"
@@ -101,7 +105,7 @@ else
 fi
 
 if [ "$#" -eq 0 ]; then
-  set -- "${ROOT_DIR}"/miku-docx2md/src/test/resources/docx/*.docx
+  set -- "${ROOT_DIR}"/src/test/resources/docx/*.docx
 fi
 
 for input in "$@"; do

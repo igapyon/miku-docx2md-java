@@ -15,8 +15,11 @@
 - upstream `.docx` fixture expected summary parity tests
 - Node-vs-Java CLI comparison script for CLI metadata, usage errors, verbose diagnostics, Markdown, summary, stdout Markdown, mixed summary/Markdown stdout, debug Markdown, `--include-unsupported-comments` Markdown, manifest, and asset files
 - GitHub Release CLI runtime workflow for jar and sources jar assets
-- Maven plugin module with `convert` and `convert-directory` goals
-- Maven plugin full-coordinate smoke script for `convert` and `convert-directory`
+- Maven plugin module with `convert` and `convert-directory` goals, later
+  separated to <https://github.com/igapyon/miku-docx2md-java-maven>
+- Maven plugin full-coordinate smoke script, later moved to the separated Maven
+  plugin repository
+- Single Maven project layout after Maven plugin separation
 - CLI batch conversion for multiple positional files and `--input-directory`
 - upstream class, CLI, and test mapping documents
 
@@ -26,7 +29,7 @@ No active initial straight-conversion items.
 
 ## Follow-up Candidates
 
-- Broaden Maven plugin smoke coverage if additional real-world DOCX fixtures are added.
+- Keep separated Maven plugin compatibility aligned when runtime releases move.
 
 ## Latest Verification
 
@@ -35,12 +38,14 @@ Run:
 ```bash
 mvn test
 scripts/compare-node-java-cli.sh
-sh scripts/smoke-maven-plugin.sh
+mvn package
 ```
 
-Latest checked on 2026-05-09:
+Latest checked on 2026-05-14 after Maven plugin separation and single-project
+flattening:
 
-- `mvn test`: 46 tests passed, including expected Markdown and summary parity for 9 upstream fixtures and Maven plugin `convert` / `convert-directory` coverage.
+- `mvn test`: 44 runtime / CLI tests passed, including expected Markdown and
+  summary parity for 9 upstream fixtures.
 - `scripts/compare-node-java-cli.sh`: CLI metadata / usage errors passed, and all 9 upstream fixture verbose diagnostics, Markdown, summary, stdout Markdown, mixed summary/Markdown stdout, debug Markdown, `--include-unsupported-comments` Markdown, manifest, and asset comparisons passed.
-- `mvn package`: runtime jar, runtime sources jar, distribution zip, and Maven plugin jar were generated.
-- `sh scripts/smoke-maven-plugin.sh`: full-coordinate Maven plugin `convert` and `convert-directory` checks passed.
+- `mvn package`: runtime jar, runtime sources jar, and distribution zip were
+  generated.
