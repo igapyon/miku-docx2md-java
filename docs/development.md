@@ -5,8 +5,7 @@
 ```bash
 mvn test
 mvn package
-sh scripts/smoke-maven-plugin.sh
-java -jar miku-docx2md/target/miku-docx2md-0.9.0.jar --version
+java -jar target/miku-docx2md-1.0.0.jar --version
 scripts/compare-node-java-cli.sh
 ```
 
@@ -15,13 +14,15 @@ scripts/compare-node-java-cli.sh
 `.github/workflows/release-cli-runtime.yml` builds the Maven package from a
 `v*` tag or manual `tag_name`, verifies the runtime jar with Java 8 using
 `--version`, and uploads the runtime jar plus sources jar from the
-`miku-docx2md` runtime module to the GitHub Release.
+single `miku-docx2md` Maven project to the GitHub Release.
 
 ## Maven Plugin Scope
 
-Maven plugin support is now an explicit Java-side extension aligned with the
-closest sister project `workplace/miku-xlsx2md-java-devel`. The plugin module
-provides `convert` and `convert-directory` goals.
+Maven plugin support has been separated into
+<https://github.com/igapyon/miku-docx2md-java-maven>. Keep this repository
+focused on the runtime, CLI, core API, fixtures, and distribution artifacts.
+The separated Maven plugin repository owns plugin parameters, goals, examples,
+and plugin smoke verification.
 
 Focused tests:
 
@@ -29,12 +30,7 @@ Focused tests:
 mvn test -Dtest=MikuDocx2mdCoreTest
 mvn test -Dtest=MikuDocx2mdCliTest
 mvn test -Dtest=MikuDocx2mdFixtureParityTest
-mvn -pl miku-docx2md-maven-plugin -am -Dtest=MikuDocx2mdMojoTest test
-sh scripts/smoke-maven-plugin.sh
 ```
-
-`scripts/smoke-maven-plugin.sh` installs the local reactor artifacts and runs
-the plugin by full coordinate for both `convert` and `convert-directory`.
 
 ## Local Workspace
 

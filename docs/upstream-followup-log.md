@@ -14,8 +14,8 @@
 - Added `MikuDocx2mdFixtureParityTest` for fixture parsing, summary field stability, and image asset counts.
 - Added `scripts/compare-node-java-cli.sh` for generated Node-vs-Java CLI comparison output under `workplace/`.
 - Verified `mvn test` and Node-vs-Java comparison across all 9 copied upstream fixtures.
-- Promoted fixture smoke parity to expected Markdown parity by tracking Node CLI Markdown under `miku-docx2md/src/test/resources/expected/markdown/`.
-- Added expected summary parity by tracking Node runtime summary text under `miku-docx2md/src/test/resources/expected/summary/`.
+- Promoted fixture smoke parity to expected Markdown parity by tracking Node CLI Markdown under `src/test/resources/expected/markdown/`.
+- Added expected summary parity by tracking Node runtime summary text under `src/test/resources/expected/summary/`.
 - Added GitHub Release CLI runtime workflow from the miku-soft Java straight-conversion template.
 - Closed the initial Maven plugin scope decision by keeping plugin support out of initial straight conversion.
 - Added CLI file-output tests for Markdown, summary, image assets, manifest, and verbose stderr behavior.
@@ -36,3 +36,9 @@
 - Adopted the closest sister project shape from `workplace/miku-xlsx2md-java-devel` by splitting the runtime into `miku-docx2md` and adding `miku-docx2md-maven-plugin`.
 - Added Java-side CLI batch conversion for multiple positional `.docx` files and `--input-directory` / `--output-directory` / `--recursive`.
 - Added Maven plugin `convert` and `convert-directory` goals with focused unit coverage.
+
+## 2026-05-14
+
+- Separated Maven plugin adapter work to <https://github.com/igapyon/miku-docx2md-java-maven>.
+- Returned this repository scope to the Java runtime, CLI, core API, fixture parity tests, and distribution packaging.
+- Flattened the remaining runtime module into a single Maven jar project rooted at this repository.

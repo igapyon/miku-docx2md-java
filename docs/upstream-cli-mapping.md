@@ -2,7 +2,7 @@
 
 | Upstream Node CLI | Java CLI |
 | --- | --- |
-| `node scripts/miku-docx2md-cli.mjs <input.docx>` | `java -jar miku-docx2md/target/miku-docx2md-0.9.0.jar <input.docx>` |
+| `node scripts/miku-docx2md-cli.mjs <input.docx>` | `java -jar target/miku-docx2md-1.0.0.jar <input.docx>` |
 | `--out <file>` | `--out <file>` |
 | `--assets-dir <dir>` | `--assets-dir <dir>` |
 | `--summary` | `--summary` |

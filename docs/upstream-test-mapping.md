@@ -27,18 +27,15 @@
 | Upstream checked-in `.docx` fixtures render the expected Markdown captured from the Node CLI. | `MikuDocx2mdFixtureParityTest.rendersExpectedMarkdownForUpstreamFixtures` | `mvn test -Dtest=MikuDocx2mdFixtureParityTest` |
 | Upstream fixture summary text matches the expected summary captured from the Node runtime. | `MikuDocx2mdFixtureParityTest.producesStableSummaryTextForUpstreamFixtures` | `mvn test -Dtest=MikuDocx2mdFixtureParityTest` |
 | Upstream image fixtures produce one resolved image asset. | `MikuDocx2mdFixtureParityTest.imageFixtureAssetCountsStayAligned` | `mvn test -Dtest=MikuDocx2mdFixtureParityTest` |
-| Java-side Maven plugin converts a single DOCX file. | `MikuDocx2mdMojoTest.convertsSingleDocx` | `mvn -pl miku-docx2md-maven-plugin -am -Dtest=MikuDocx2mdMojoTest test` |
-| Java-side Maven plugin converts a DOCX directory. | `MikuDocx2mdMojoTest.convertsDirectory` | `mvn -pl miku-docx2md-maven-plugin -am -Dtest=MikuDocx2mdMojoTest test` |
-| Maven plugin full-coordinate execution works for single-file and directory goals. | `scripts/smoke-maven-plugin.sh` | `sh scripts/smoke-maven-plugin.sh` |
 
 ## Follow-up
 
 The upstream fixture corpus has been copied into
-`miku-docx2md/src/test/resources/docx/`.
+`src/test/resources/docx/`.
 Expected Markdown captured from the Node CLI is tracked under
-`miku-docx2md/src/test/resources/expected/markdown/`. Expected summary text
+`src/test/resources/expected/markdown/`. Expected summary text
 captured from the Node runtime is tracked under
-`miku-docx2md/src/test/resources/expected/summary/`. Use
+`src/test/resources/expected/summary/`. Use
 `scripts/compare-node-java-cli.sh` for upstream CLI metadata, usage errors,
 verbose diagnostics, generated Markdown, summary, stdout Markdown, mixed
 summary/Markdown stdout, debug Markdown, `--include-unsupported-comments`

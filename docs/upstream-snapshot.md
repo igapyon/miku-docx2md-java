@@ -21,11 +21,13 @@ The sister project influenced these initial repository-shape decisions:
 - Java 8 source and target compatibility
 - JUnit Jupiter tests
 - thin CLI entrypoint delegating to core runtime
-- multi-module runtime / Maven plugin shape
+- initial multi-module runtime / Maven plugin shape, later separated into
+  `miku-docx2md-java` and `miku-docx2md-java-maven`
 - executable shaded runtime jar
 - `docs/` mapping and status documents
 - `workplace/.gitkeep` as the only tracked workplace file
 
 The closest sister project's Maven plugin and directory conversion shape was
 used for the Java-side follow-up that added `miku-docx2md-maven-plugin` and
-batch CLI conversion.
+batch CLI conversion. The Maven plugin adapter was later separated to
+<https://github.com/igapyon/miku-docx2md-java-maven>.

@@ -16,8 +16,7 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  RUNTIME_MODULE: "miku-docx2md"
-  RUNTIME_TARGET_DIR: "miku-docx2md/target"
+  RUNTIME_TARGET_DIR: "target"
 
 jobs:
   release-cli-runtime:
@@ -46,7 +45,7 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${TAG_NAME#v}"
-          ARTIFACT_ID="$(mvn -pl "${RUNTIME_MODULE}" help:evaluate -Dexpression=project.artifactId -q -DforceStdout)"
+          ARTIFACT_ID="$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)"
           POM_VERSION="$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
           echo "RELEASE_ARTIFACT_ID=${ARTIFACT_ID}" >> "${GITHUB_ENV}"
           case "${VERSION}" in

@@ -11,4 +11,5 @@
 
 ## Follow-up Candidates
 
-- Broaden Maven plugin smoke coverage if additional real-world DOCX fixtures are added.
+- Keep `miku-docx2md-java-maven` runtime dependency compatibility aligned when
+  this runtime version changes.

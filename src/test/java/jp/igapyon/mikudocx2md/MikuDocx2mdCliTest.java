@@ -32,7 +32,7 @@ class MikuDocx2mdCliTest {
         out.reset();
         int versionStatus = new MikuDocx2mdCli().run(new String[] {"--version"}, new PrintStream(out), new PrintStream(err));
         assertEquals(0, versionStatus);
-        assertEquals("miku-docx2md 0.9.0\n", out.toString());
+        assertEquals("miku-docx2md 1.0.0\n", out.toString());
     }
 
     @Test
