@@ -27,6 +27,7 @@
 | Upstream checked-in `.docx` fixtures render the expected Markdown captured from the Node CLI. | `MikuDocx2mdFixtureParityTest.rendersExpectedMarkdownForUpstreamFixtures` | `mvn test -Dtest=MikuDocx2mdFixtureParityTest` |
 | Upstream fixture summary text matches the expected summary captured from the Node runtime. | `MikuDocx2mdFixtureParityTest.producesStableSummaryTextForUpstreamFixtures` | `mvn test -Dtest=MikuDocx2mdFixtureParityTest` |
 | Upstream image fixtures produce one resolved image asset. | `MikuDocx2mdFixtureParityTest.imageFixtureAssetCountsStayAligned` | `mvn test -Dtest=MikuDocx2mdFixtureParityTest` |
+| Java-side runtime file API converts single files and recursive input directories for CLI and separated adapters. | `MikuDocx2mdFileConverterTest` | `mvn test -Dtest=MikuDocx2mdFileConverterTest` |
 
 ## Follow-up
 
