@@ -4,7 +4,7 @@ set -eu
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 UPSTREAM_DIR="${MIKU_DOCX2MD_UPSTREAM_DIR:-${ROOT_DIR}/../miku-docx2md}"
 WORK_DIR="${ROOT_DIR}/workplace/node-java-cli"
-JAVA_JAR="${ROOT_DIR}/target/miku-docx2md-1.0.0.jar"
+JAVA_JAR="${ROOT_DIR}/target/miku-docx2md-1.2.1.jar"
 
 (cd "${ROOT_DIR}" && mvn -q -DskipTests package)
 
@@ -44,7 +44,7 @@ compare_status() {
 }
 
 normalize_help() {
-  sed 's#node scripts/miku-docx2md-cli.mjs#java -jar miku-docx2md-1.0.0.jar#g'
+  sed 's#node scripts/miku-docx2md-cli.mjs#java -jar miku-docx2md-1.2.1.jar#g'
 }
 
 normalize_version() {

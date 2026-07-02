@@ -59,9 +59,9 @@ scripts/compare-node-java-cli.sh
 
 The expected runtime outputs are now:
 
-- `target/miku-docx2md-1.0.0.jar`
-- `target/miku-docx2md-1.0.0-sources.jar`
-- `target/miku-docx2md-1.0.0-dist.zip`
+- `target/miku-docx2md-1.2.1.jar`
+- `target/miku-docx2md-1.2.1-sources.jar`
+- `target/miku-docx2md-1.2.1-dist.zip`
 
 ## Separated Repository Shape
 

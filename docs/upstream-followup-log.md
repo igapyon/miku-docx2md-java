@@ -52,3 +52,8 @@
 - Added upstream Word-authored reviewing fixtures `word-reviewing-comments-basic.docx` and `word-reviewing-tracked-changes-basic.docx` to Java fixture parity coverage.
 - Updated summary fixture expectations and Node-vs-Java comparison normalization for Java-vs-Node front matter version differences.
 - Verified `mvn test`, `mvn package`, and `scripts/compare-node-java-cli.sh`.
+- Re-checked upstream tag `v1.2.1` at commit `f5bdf21`.
+- Confirmed the upstream `v1.2.1` implementation change is an internal
+  TypeScript parse-context separation with no new Java CLI/output contract.
+- Aligned the Java runtime, Maven package version, CLI help examples, tests,
+  README, and maintenance docs with upstream version `1.2.1`.

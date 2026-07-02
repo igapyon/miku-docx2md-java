@@ -6,6 +6,8 @@
 - Local upstream checkout: `../miku-docx2md`
 - Snapshot branch checked during initial conversion: `tiga0508wfj`
 - Snapshot commit checked during initial conversion: `0667817331d617b5c8eec5a529a6b430a4d7b91f`
+- Latest upstream follow-up checked locally: branch `devel-tiga0702vfd`,
+  tag `v1.2.1`, commit `f5bdf21`
 - Upstream reference method: local checkout, not vendored
 
 ## Sister Reference
