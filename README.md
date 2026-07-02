@@ -40,6 +40,12 @@ Debug comments:
 java -jar target/miku-docx2md-1.0.0.jar ./sample.docx --out ./sample.md --debug
 ```
 
+Omit YAML front matter:
+
+```bash
+java -jar target/miku-docx2md-1.0.0.jar ./sample.docx --out ./sample.md --front-matter exclude
+```
+
 Batch directory conversion:
 
 ```bash
@@ -59,9 +65,10 @@ java -jar target/miku-docx2md-1.0.0.jar \
 - Distribution package: `target/miku-docx2md-1.0.0-dist.zip`
 
 The Java port covers the runtime core, CLI path, document XML, relationships,
-styles, numbering, Markdown rendering, image asset extraction, summary text,
-file output, and Java-side batch conversion. Browser UI behavior from upstream
-is out of scope for this Java repository.
+styles, numbering, Word comments as Markdown footnotes, tracked insertion /
+deletion markup, Markdown rendering, YAML front matter, image asset extraction,
+summary text, file output, and Java-side batch conversion. Browser UI behavior
+from upstream is out of scope for this Java repository.
 
 Maven plugin support is separated into
 [`miku-docx2md-java-maven`](https://github.com/igapyon/miku-docx2md-java-maven).

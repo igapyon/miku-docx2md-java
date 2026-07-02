@@ -26,6 +26,7 @@ class MikuDocx2mdCliTest {
         assertEquals(0, helpStatus);
         assertTrue(out.toString().contains("miku-docx2md - local-first DOCX to Markdown converter"));
         assertTrue(out.toString().contains("manifest.json"));
+        assertTrue(out.toString().contains("--front-matter <mode>"));
         assertTrue(out.toString().contains("If --out is omitted, avoid --summary unless mixed stdout output is acceptable."));
         assertTrue(out.toString().contains("Write Markdown to this file. Parent directories are created."));
 
@@ -79,6 +80,21 @@ class MikuDocx2mdCliTest {
         assertEquals(1, status);
         assertEquals("", out.toString());
         assertTrue(err.toString().contains("Missing value for --out"), err.toString());
+    }
+
+    @Test
+    void rejectsInvalidFrontMatterMode() {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+
+        int status = new MikuDocx2mdCli().run(
+                new String[] {"sample.docx", "--front-matter", "maybe"},
+                new PrintStream(out),
+                new PrintStream(err));
+
+        assertEquals(1, status);
+        assertEquals("", out.toString());
+        assertTrue(err.toString().contains("Invalid front matter mode: maybe"), err.toString());
     }
 
     @Test
@@ -170,7 +186,7 @@ class MikuDocx2mdCliTest {
         assertTrue(err.toString().contains("summary-written " + summaryOutput), err.toString());
         assertTrue(err.toString().contains("markdown-written " + markdownOutput), err.toString());
         assertTrue(err.toString().contains("done total-ms="), err.toString());
-        assertEquals(readTextResource("/expected/markdown/word-bullet-list-basic.md"), readText(markdownOutput));
+        assertEquals(withFrontMatter("word-bullet-list-basic.docx", false, readTextResource("/expected/markdown/word-bullet-list-basic.md")), readText(markdownOutput));
         assertEquals(readTextResource("/expected/summary/word-bullet-list-basic.txt"), readText(summaryOutput));
     }
 
@@ -182,6 +198,22 @@ class MikuDocx2mdCliTest {
 
         int status = new MikuDocx2mdCli().run(
                 new String[] {input.toString()},
+                new PrintStream(out),
+                new PrintStream(err));
+
+        assertEquals(0, status);
+        assertEquals("", err.toString());
+        assertEquals(withFrontMatter("word-bullet-list-basic.docx", false, readTextResource("/expected/markdown/word-bullet-list-basic.md")), out.toString("UTF-8"));
+    }
+
+    @Test
+    void omitsFrontMatterWhenRequested() throws IOException {
+        Path input = copyResourceToTemp("/docx/word-bullet-list-basic.docx", "word-bullet-list-basic.docx");
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+
+        int status = new MikuDocx2mdCli().run(
+                new String[] {input.toString(), "--front-matter", "exclude"},
                 new PrintStream(out),
                 new PrintStream(err));
 
@@ -206,7 +238,7 @@ class MikuDocx2mdCliTest {
         assertEquals(
                 readTextResource("/expected/summary/word-bullet-list-basic.txt")
                         + System.lineSeparator()
-                        + readTextResource("/expected/markdown/word-bullet-list-basic.md"),
+                        + withFrontMatter("word-bullet-list-basic.docx", false, readTextResource("/expected/markdown/word-bullet-list-basic.md")),
                 out.toString("UTF-8"));
     }
 
@@ -232,6 +264,7 @@ class MikuDocx2mdCliTest {
         assertEquals("", err.toString());
         assertTrue(Files.exists(assetsDir.resolve("word/media/image1.jpeg")));
         String markdown = readText(markdownOutput);
+        assertTrue(markdown.startsWith("---\ntitle: \"word-inline-image-basic.docx\""), markdown);
         assertTrue(markdown.contains("![](assets/word/media/image1.jpeg)"), markdown);
         String manifest = readText(assetsDir.resolve("manifest.json"));
         assertTrue(manifest.contains("\"version\": 1"), manifest);
@@ -329,5 +362,17 @@ class MikuDocx2mdCliTest {
 
     private String readText(Path path) throws IOException {
         return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+    }
+
+    private String withFrontMatter(String title, boolean includeUnsupportedComments, String body) {
+        return "---\n"
+                + "title: \"" + title + "\"\n"
+                + "type: converted\n"
+                + "conversion:\n"
+                + "  tool: miku-docx2md\n"
+                + "  version: \"1.0.0\"\n"
+                + "  unsupported_comments: " + (includeUnsupportedComments ? "include" : "exclude") + "\n"
+                + "---\n\n"
+                + body;
     }
 }

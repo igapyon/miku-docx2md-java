@@ -36,7 +36,7 @@ class MikuDocx2mdFileConverterTest {
 
         assertEquals(markdownOutput, result.outputFile);
         assertEquals(summaryOutput, result.summaryFile);
-        assertEquals(readTextResource("/expected/markdown/word-bullet-list-basic.md"), readText(markdownOutput));
+        assertEquals(withFrontMatter("word-bullet-list-basic.docx", readTextResource("/expected/markdown/word-bullet-list-basic.md")), readText(markdownOutput));
         assertEquals(readTextResource("/expected/summary/word-bullet-list-basic.txt"), readText(summaryOutput));
         assertEquals(readText(markdownOutput), result.markdown);
         assertEquals(readText(summaryOutput), result.summary);
@@ -91,5 +91,17 @@ class MikuDocx2mdFileConverterTest {
 
     private String readText(Path path) throws IOException {
         return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+    }
+
+    private String withFrontMatter(String title, String body) {
+        return "---\n"
+                + "title: \"" + title + "\"\n"
+                + "type: converted\n"
+                + "conversion:\n"
+                + "  tool: miku-docx2md\n"
+                + "  version: \"1.0.0\"\n"
+                + "  unsupported_comments: exclude\n"
+                + "---\n\n"
+                + body;
     }
 }

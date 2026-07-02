@@ -54,6 +54,7 @@ public class MikuDocx2mdCli {
         fileOptions.assetsDirectory = options.assetsDir == null ? null : Paths.get(options.assetsDir);
         fileOptions.summaryToStdout = options.summary;
         fileOptions.includeUnsupportedComments = options.includeUnsupportedComments;
+        fileOptions.frontMatter = options.frontMatter;
         fileOptions.listener = verbose;
         try {
             MikuDocx2mdFileResult result = new MikuDocx2mdFileConverter().convertFile(fileOptions);
@@ -84,6 +85,7 @@ public class MikuDocx2mdCli {
         batchOptions.assetsDirectory = options.assetsDir == null ? null : Paths.get(options.assetsDir);
         batchOptions.recursive = options.recursive;
         batchOptions.includeUnsupportedComments = options.includeUnsupportedComments;
+        batchOptions.frontMatter = options.frontMatter;
         for (String inputPath : options.inputPaths) {
             batchOptions.inputFiles.add(Paths.get(inputPath));
         }
@@ -157,6 +159,9 @@ public class MikuDocx2mdCli {
         out.println("  --summary-out <file>");
         out.println("      Write summary text to this file. Parent directories are created.");
         out.println();
+        out.println("  --front-matter <mode>");
+        out.println("      include or exclude. Default: include.");
+        out.println();
         out.println("  --debug");
         out.println("      Include unsupported-element HTML comment traces in Markdown.");
         out.println();
@@ -189,7 +194,8 @@ public class MikuDocx2mdCli {
         out.println();
         out.println("OUTPUTS");
         out.println("  Markdown:");
-        out.println("      Main converted document structure.");
+        out.println("      Main converted document structure. Starts with YAML front matter by");
+        out.println("      default; use --front-matter exclude to omit it.");
         out.println();
         out.println("  Summary:");
         out.println("      Text counts and diagnostics for converted document content.");
@@ -217,6 +223,9 @@ public class MikuDocx2mdCli {
         out.println();
         out.println("  Include unsupported-element debug traces:");
         out.println("    java -jar miku-docx2md-1.0.0.jar ./sample.docx --out ./sample.md --debug");
+        out.println();
+        out.println("  Omit YAML front matter:");
+        out.println("    java -jar miku-docx2md-1.0.0.jar ./sample.docx --out ./sample.md --front-matter exclude");
         out.println();
         out.println("  Show progress diagnostics on stderr:");
         out.println("    java -jar miku-docx2md-1.0.0.jar ./sample.docx --out ./sample.md --verbose");

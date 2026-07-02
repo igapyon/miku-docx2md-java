@@ -11,6 +11,7 @@ class CliOptions {
     String outPath;
     String assetsDir;
     String summaryOutPath;
+    String frontMatter = "include";
     boolean summary;
     boolean includeUnsupportedComments;
     boolean recursive;
@@ -56,6 +57,8 @@ class CliOptions {
                 options.assetsDir = requireValue(args, ++index, arg);
             } else if ("--summary-out".equals(arg)) {
                 options.summaryOutPath = requireValue(args, ++index, arg);
+            } else if ("--front-matter".equals(arg)) {
+                options.frontMatter = requireFrontMatterMode(requireValue(args, ++index, arg));
             } else if ("--input-directory".equals(arg)) {
                 options.inputDirectory = requireValue(args, ++index, arg);
             } else if ("--output-directory".equals(arg)) {
@@ -68,6 +71,13 @@ class CliOptions {
             options.inputPath = options.inputPaths.get(0);
         }
         return options;
+    }
+
+    private static String requireFrontMatterMode(String value) {
+        if ("include".equals(value) || "exclude".equals(value)) {
+            return value;
+        }
+        throw new IllegalArgumentException("Invalid front matter mode: " + value);
     }
 
     private static String requireValue(String[] args, int index, String option) {

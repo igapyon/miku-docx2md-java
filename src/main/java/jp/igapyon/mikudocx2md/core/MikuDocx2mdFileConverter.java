@@ -50,6 +50,9 @@ public class MikuDocx2mdFileConverter {
             log(listener, "parsed blocks=" + parsed.blocks.size() + " assets=" + parsed.assets.size());
             MarkdownOptions markdownOptions = new MarkdownOptions();
             markdownOptions.includeUnsupportedComments = options.includeUnsupportedComments;
+            markdownOptions.frontMatter = options.frontMatter;
+            markdownOptions.title = options.inputFile.getFileName().toString();
+            markdownOptions.toolVersion = MikuDocx2mdCore.VERSION;
             markdownOptions.imagePathResolver = createImagePathResolver(options.outputFile, options.assetsDirectory);
             markdown = core.renderMarkdown(parsed, markdownOptions);
             summary = core.createSummaryText(parsed);
@@ -112,6 +115,7 @@ public class MikuDocx2mdFileConverter {
             fileOptions.outputFile = outputFile;
             fileOptions.assetsDirectory = assetsDir;
             fileOptions.includeUnsupportedComments = options.includeUnsupportedComments;
+            fileOptions.frontMatter = options.frontMatter;
             fileOptions.listener = options.listener;
             result.files.add(convertFile(fileOptions));
         }

@@ -1,4 +1,4 @@
-paragraphs: 2
+paragraphs: 3
 headings: 0
 listItems: 0
 tables: 0

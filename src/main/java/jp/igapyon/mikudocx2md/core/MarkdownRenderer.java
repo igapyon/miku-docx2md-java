@@ -5,6 +5,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import jp.igapyon.mikudocx2md.model.ParsedBlock;
+import jp.igapyon.mikudocx2md.model.ParsedComment;
 import jp.igapyon.mikudocx2md.model.ParsedDocx;
 
 final class MarkdownRenderer {
@@ -28,7 +29,40 @@ final class MarkdownRenderer {
             }
             builder.append(rendered.get(index).markdown);
         }
-        return builder.toString();
+        String commentFootnotes = renderCommentFootnotes(parsed.comments);
+        if (commentFootnotes.length() > 0) {
+            if (builder.length() > 0) {
+                builder.append("\n\n");
+            }
+            builder.append(commentFootnotes);
+        }
+        String body = builder.toString();
+        return shouldIncludeFrontMatter(options) ? createFrontMatter(options) + "\n\n" + body : body;
+    }
+
+    private static boolean shouldIncludeFrontMatter(MarkdownOptions options) {
+        return options != null && !"exclude".equals(options.frontMatter == null ? "exclude" : options.frontMatter);
+    }
+
+    private static String createFrontMatter(MarkdownOptions options) {
+        String title = options.title == null || options.title.length() == 0 ? "document.docx" : options.title;
+        String toolVersion = options.toolVersion == null || options.toolVersion.length() == 0 ? "unknown" : options.toolVersion;
+        return "---\n"
+                + "title: " + quoteYamlString(title) + "\n"
+                + "type: converted\n"
+                + "conversion:\n"
+                + "  tool: miku-docx2md\n"
+                + "  version: " + quoteYamlString(toolVersion) + "\n"
+                + "  unsupported_comments: " + (options.includeUnsupportedComments ? "include" : "exclude") + "\n"
+                + "---";
+    }
+
+    private static String quoteYamlString(String value) {
+        return "\"" + (value == null ? "" : value)
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\r", "\\r")
+                .replace("\n", "\\n") + "\"";
     }
 
     private static String renderMarkdownBlock(ParsedBlock block, MarkdownOptions options) {
@@ -45,6 +79,17 @@ final class MarkdownRenderer {
         }
         String content = renderSupportedBlock(block);
         return appendUnsupportedArtifacts(content, block.unsupportedTypes, options);
+    }
+
+    private static String renderCommentFootnotes(List<ParsedComment> comments) {
+        List<String> definitions = new ArrayList<String>();
+        for (ParsedComment comment : comments) {
+            String text = comment.text == null ? "" : comment.text.trim();
+            if (text.length() > 0) {
+                definitions.add("[^" + comment.label + "]: " + text);
+            }
+        }
+        return join(definitions, "\n");
     }
 
     private static String renderSupportedBlock(ParsedBlock block) {

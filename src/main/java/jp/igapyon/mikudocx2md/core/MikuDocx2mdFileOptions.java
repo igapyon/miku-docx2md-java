@@ -9,5 +9,6 @@ public class MikuDocx2mdFileOptions {
     public Path assetsDirectory;
     public boolean summaryToStdout;
     public boolean includeUnsupportedComments;
+    public String frontMatter = "include";
     public MikuDocx2mdConversionListener listener;
 }
