@@ -33,7 +33,7 @@ class MikuDocx2mdCliTest {
         out.reset();
         int versionStatus = new MikuDocx2mdCli().run(new String[] {"--version"}, new PrintStream(out), new PrintStream(err));
         assertEquals(0, versionStatus);
-        assertEquals("miku-docx2md 1.0.0\n", out.toString());
+        assertEquals("miku-docx2md 1.2.1\n", out.toString());
     }
 
     @Test
@@ -370,7 +370,7 @@ class MikuDocx2mdCliTest {
                 + "type: converted\n"
                 + "conversion:\n"
                 + "  tool: miku-docx2md\n"
-                + "  version: \"1.0.0\"\n"
+                + "  version: \"1.2.1\"\n"
                 + "  unsupported_comments: " + (includeUnsupportedComments ? "include" : "exclude") + "\n"
                 + "---\n\n"
                 + body;

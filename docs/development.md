@@ -5,7 +5,7 @@
 ```bash
 mvn test
 mvn package
-java -jar target/miku-docx2md-1.0.0.jar --version
+java -jar target/miku-docx2md-1.2.1.jar --version
 scripts/compare-node-java-cli.sh
 ```
 

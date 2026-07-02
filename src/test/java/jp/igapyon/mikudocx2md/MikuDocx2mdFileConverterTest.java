@@ -99,7 +99,7 @@ class MikuDocx2mdFileConverterTest {
                 + "type: converted\n"
                 + "conversion:\n"
                 + "  tool: miku-docx2md\n"
-                + "  version: \"1.0.0\"\n"
+                + "  version: \"1.2.1\"\n"
                 + "  unsupported_comments: exclude\n"
                 + "---\n\n"
                 + body;

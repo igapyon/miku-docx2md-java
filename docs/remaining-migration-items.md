@@ -48,8 +48,9 @@ mvn package
 ```
 
 Latest checked on 2026-07-02 after following upstream `devel-tiga0702vfd`
-front matter output, `sectPr` summary handling, Word comment footnotes, and
-tracked insertion / deletion markup:
+tag `v1.2.1`, including front matter output, `sectPr` summary handling, Word
+comment footnotes, tracked insertion / deletion markup, and version number
+alignment:
 
 - `mvn test`: 65 runtime / CLI tests passed, including expected Markdown and
   summary parity for 11 upstream fixtures.

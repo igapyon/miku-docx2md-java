@@ -19,37 +19,37 @@ mvn package
 Run:
 
 ```bash
-java -jar target/miku-docx2md-1.0.0.jar ./sample.docx --out ./sample.md
+java -jar target/miku-docx2md-1.2.1.jar ./sample.docx --out ./sample.md
 ```
 
 Summary output:
 
 ```bash
-java -jar target/miku-docx2md-1.0.0.jar ./sample.docx --out ./sample.md --summary --summary-out ./sample.summary.txt
+java -jar target/miku-docx2md-1.2.1.jar ./sample.docx --out ./sample.md --summary --summary-out ./sample.summary.txt
 ```
 
 Image assets:
 
 ```bash
-java -jar target/miku-docx2md-1.0.0.jar ./sample.docx --out ./sample.md --assets-dir ./sample.assets
+java -jar target/miku-docx2md-1.2.1.jar ./sample.docx --out ./sample.md --assets-dir ./sample.assets
 ```
 
 Debug comments:
 
 ```bash
-java -jar target/miku-docx2md-1.0.0.jar ./sample.docx --out ./sample.md --debug
+java -jar target/miku-docx2md-1.2.1.jar ./sample.docx --out ./sample.md --debug
 ```
 
 Omit YAML front matter:
 
 ```bash
-java -jar target/miku-docx2md-1.0.0.jar ./sample.docx --out ./sample.md --front-matter exclude
+java -jar target/miku-docx2md-1.2.1.jar ./sample.docx --out ./sample.md --front-matter exclude
 ```
 
 Batch directory conversion:
 
 ```bash
-java -jar target/miku-docx2md-1.0.0.jar \
+java -jar target/miku-docx2md-1.2.1.jar \
   --input-directory ./docx \
   --output-directory ./markdown \
   --recursive
@@ -62,7 +62,7 @@ java -jar target/miku-docx2md-1.0.0.jar \
 - Test framework: JUnit Jupiter
 - Primary verification: `mvn test`
 - Runtime package: executable fat jar under `target/`
-- Distribution package: `target/miku-docx2md-1.0.0-dist.zip`
+- Distribution package: `target/miku-docx2md-1.2.1-dist.zip`
 
 The Java port covers the runtime core, CLI path, document XML, relationships,
 styles, numbering, Word comments as Markdown footnotes, tracked insertion /
@@ -83,7 +83,7 @@ GitHub Release asset workflow support is provided by
 
 - Upstream Node.js / TypeScript repository: <https://github.com/igapyon/miku-docx2md>
 - Local upstream checkout used for this conversion: `../miku-docx2md`
-- Upstream snapshot checked locally: branch `tiga0508wfj`, commit `0667817331d617b5c8eec5a529a6b430a4d7b91f`
+- Upstream snapshot checked locally: branch `devel-tiga0702vfd`, tag `v1.2.1`, commit `f5bdf21`
 - Sister Java project: <https://github.com/igapyon/miku-xlsx2md-java>
 - Local sister checkout used as the Java shape reference: `../miku-xlsx2md-java`
 - Closest local sister checkout used for historical Maven plugin and batch CLI
