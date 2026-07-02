@@ -8,5 +8,5 @@ drawingLikeUnsupported: 0
 links: 2
 internalLinks: 1
 externalLinks: 1
-unsupportedElements: 2
-unsupportedCommentTraces: 2
+unsupportedElements: 1
+unsupportedCommentTraces: 1

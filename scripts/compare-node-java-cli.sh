@@ -59,6 +59,10 @@ normalize_verbose() {
   sed -E "s#${WORK_DIR}/(node|java)#${WORK_DIR}/<side>#g; s/verbose: \+[0-9]+ms/verbose: +<ms>ms/g; s/done total-ms=[0-9]+/done total-ms=<ms>/g"
 }
 
+normalize_markdown() {
+  sed -E 's/^  version: ".*"$/  version: "<version>"/'
+}
+
 status=0
 compare_metadata_status=0
 
@@ -157,12 +161,23 @@ for input in "$@"; do
   include_unsupported_status=0
   verbose_status=0
   assets_status=0
-  diff -u "${node_markdown_output}" "${java_markdown_output}" > "${WORK_DIR}/${name}.markdown.diff" || markdown_status=$?
+  normalize_markdown < "${node_markdown_output}" > "${node_markdown_output}.normalized"
+  normalize_markdown < "${java_markdown_output}" > "${java_markdown_output}.normalized"
+  normalize_markdown < "${node_stdout_output}" > "${node_stdout_output}.normalized"
+  normalize_markdown < "${java_stdout_output}" > "${java_stdout_output}.normalized"
+  normalize_markdown < "${node_summary_stdout_output}" > "${node_summary_stdout_output}.normalized"
+  normalize_markdown < "${java_summary_stdout_output}" > "${java_summary_stdout_output}.normalized"
+  normalize_markdown < "${node_debug_output}" > "${node_debug_output}.normalized"
+  normalize_markdown < "${java_debug_output}" > "${java_debug_output}.normalized"
+  normalize_markdown < "${node_include_unsupported_output}" > "${node_include_unsupported_output}.normalized"
+  normalize_markdown < "${java_include_unsupported_output}" > "${java_include_unsupported_output}.normalized"
+
+  diff -u "${node_markdown_output}.normalized" "${java_markdown_output}.normalized" > "${WORK_DIR}/${name}.markdown.diff" || markdown_status=$?
   diff -u "${node_summary_output}" "${java_summary_output}" > "${WORK_DIR}/${name}.summary.diff" || summary_status=$?
-  diff -u "${node_stdout_output}" "${java_stdout_output}" > "${WORK_DIR}/${name}.stdout.diff" || stdout_status=$?
-  diff -u "${node_summary_stdout_output}" "${java_summary_stdout_output}" > "${WORK_DIR}/${name}.summary-stdout.diff" || summary_stdout_status=$?
-  diff -u "${node_debug_output}" "${java_debug_output}" > "${WORK_DIR}/${name}.debug.diff" || debug_status=$?
-  diff -u "${node_include_unsupported_output}" "${java_include_unsupported_output}" > "${WORK_DIR}/${name}.include-unsupported.diff" || include_unsupported_status=$?
+  diff -u "${node_stdout_output}.normalized" "${java_stdout_output}.normalized" > "${WORK_DIR}/${name}.stdout.diff" || stdout_status=$?
+  diff -u "${node_summary_stdout_output}.normalized" "${java_summary_stdout_output}.normalized" > "${WORK_DIR}/${name}.summary-stdout.diff" || summary_stdout_status=$?
+  diff -u "${node_debug_output}.normalized" "${java_debug_output}.normalized" > "${WORK_DIR}/${name}.debug.diff" || debug_status=$?
+  diff -u "${node_include_unsupported_output}.normalized" "${java_include_unsupported_output}.normalized" > "${WORK_DIR}/${name}.include-unsupported.diff" || include_unsupported_status=$?
   diff -u "${node_verbose_stderr}" "${java_verbose_stderr}" > "${WORK_DIR}/${name}.verbose.stderr.diff" || verbose_status=$?
   diff -ru "${node_assets_dir}" "${java_assets_dir}" > "${WORK_DIR}/${name}.assets.diff" || assets_status=$?
 

@@ -7,6 +7,7 @@
 | `--assets-dir <dir>` | `--assets-dir <dir>` |
 | `--summary` | `--summary` |
 | `--summary-out <file>` | `--summary-out <file>` |
+| `--front-matter <mode>` | `--front-matter <mode>` |
 | `--debug` | `--debug` |
 | `--include-unsupported-comments` | `--include-unsupported-comments` |
 | `--verbose` | `--verbose` |
@@ -35,6 +36,8 @@ These options intentionally follow the closest sister project
 - If `--summary` is used without `--out`, summary text is printed first,
   followed by Markdown on the same stdout stream.
 - `--summary-out` writes summary text to a file.
+- `--front-matter include` is the CLI default.
+- `--front-matter exclude` omits the YAML front matter from Markdown output.
 - `--verbose` writes diagnostics to stderr with the `verbose:` prefix.
 - Verbose diagnostics include input, output, summary, assets, byte count,
   parsed block / asset counts, written outputs, and total elapsed time.

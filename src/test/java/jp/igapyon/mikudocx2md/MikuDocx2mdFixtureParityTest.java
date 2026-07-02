@@ -28,6 +28,8 @@ class MikuDocx2mdFixtureParityTest {
                 "word-links-basic.docx",
                 "word-nested-list-basic.docx",
                 "word-numbered-list-basic.docx",
+                "word-reviewing-comments-basic.docx",
+                "word-reviewing-tracked-changes-basic.docx",
                 "word-table-merged-cell-basic.docx");
     }
 
@@ -60,6 +62,30 @@ class MikuDocx2mdFixtureParityTest {
         if ("word-inline-image-basic.docx".equals(fixtureName) || "word-image-alt-text-basic.docx".equals(fixtureName)) {
             assertEquals(1, parsed.assets.size(), fixtureName);
             assertEquals(1, parsed.summary.imageAssets, fixtureName);
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("upstreamFixtures")
+    void reviewingFixturesStayAligned(String fixtureName) throws IOException {
+        ParsedDocx parsed = CORE.parseDocx(readFixture(fixtureName));
+        String markdown = CORE.renderMarkdown(parsed, new MarkdownOptions());
+
+        if ("word-reviewing-tracked-changes-basic.docx".equals(fixtureName)) {
+            assertEquals(0, parsed.comments.size(), fixtureName);
+            org.junit.jupiter.api.Assertions.assertTrue(markdown.contains("校閲して<ins>追加の</ins>テスト"), markdown);
+            org.junit.jupiter.api.Assertions.assertTrue(markdown.contains("校閲して~~ここを変更~~<ins>変更についての</ins>テスト"), markdown);
+            org.junit.jupiter.api.Assertions.assertFalse(markdown.contains("unsupported: ins"), markdown);
+        }
+        if ("word-reviewing-comments-basic.docx".equals(fixtureName)) {
+            assertEquals(3, parsed.comments.size(), fixtureName);
+            org.junit.jupiter.api.Assertions.assertTrue(markdown.contains("コメントってどんな[^comment-1]もの。"), markdown);
+            org.junit.jupiter.api.Assertions.assertTrue(markdown.contains("コメントへのコメントとは[^comment-2][^comment-3]。"), markdown);
+            org.junit.jupiter.api.Assertions.assertTrue(markdown.contains("[^comment-1]: コメントがどのように扱われるのか。"), markdown);
+            org.junit.jupiter.api.Assertions.assertTrue(markdown.contains("[^comment-2]: コメントへのコメントとは。"), markdown);
+            org.junit.jupiter.api.Assertions.assertTrue(markdown.contains("[^comment-3]: これがコメントへの返信。"), markdown);
+            org.junit.jupiter.api.Assertions.assertFalse(markdown.contains("unsupported: commentRangeStart"), markdown);
+            org.junit.jupiter.api.Assertions.assertFalse(markdown.contains("unsupported: commentRangeEnd"), markdown);
         }
     }
 

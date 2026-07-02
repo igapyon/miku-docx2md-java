@@ -42,3 +42,13 @@
 - Separated Maven plugin adapter work to <https://github.com/igapyon/miku-docx2md-java-maven>.
 - Returned this repository scope to the Java runtime, CLI, core API, fixture parity tests, and distribution packaging.
 - Flattened the remaining runtime module into a single Maven jar project rooted at this repository.
+
+## 2026-07-02
+
+- Re-checked local upstream `../miku-docx2md` at branch `devel-tiga0702vfd`.
+- Followed upstream CLI YAML front matter behavior by adding `--front-matter include|exclude` and default CLI front matter output.
+- Aligned body-level `sectPr` handling with upstream by ignoring it instead of counting it as unsupported content.
+- Followed upstream Word reviewing support by parsing `word/comments.xml`, rendering referenced comments as Markdown footnotes, ignoring comment ranges, and preserving tracked insertion / deletion markup.
+- Added upstream Word-authored reviewing fixtures `word-reviewing-comments-basic.docx` and `word-reviewing-tracked-changes-basic.docx` to Java fixture parity coverage.
+- Updated summary fixture expectations and Node-vs-Java comparison normalization for Java-vs-Node front matter version differences.
+- Verified `mvn test`, `mvn package`, and `scripts/compare-node-java-cli.sh`.

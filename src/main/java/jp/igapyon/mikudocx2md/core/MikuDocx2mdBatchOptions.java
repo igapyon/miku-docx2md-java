@@ -11,5 +11,6 @@ public class MikuDocx2mdBatchOptions {
     public Path assetsDirectory;
     public boolean recursive;
     public boolean includeUnsupportedComments;
+    public String frontMatter = "include";
     public MikuDocx2mdConversionListener listener;
 }

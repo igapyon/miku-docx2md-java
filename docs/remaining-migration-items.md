@@ -14,6 +14,9 @@
 - upstream `.docx` fixture expected Markdown parity tests
 - upstream `.docx` fixture expected summary parity tests
 - Node-vs-Java CLI comparison script for CLI metadata, usage errors, verbose diagnostics, Markdown, summary, stdout Markdown, mixed summary/Markdown stdout, debug Markdown, `--include-unsupported-comments` Markdown, manifest, and asset files
+- YAML front matter CLI parity, including `--front-matter include|exclude`
+- Word reviewing comment footnote parity
+- Word tracked insertion / deletion markup parity
 - GitHub Release CLI runtime workflow for jar and sources jar assets
 - Maven plugin module with `convert` and `convert-directory` goals, later
   separated to <https://github.com/igapyon/miku-docx2md-java-maven>
@@ -44,11 +47,12 @@ scripts/compare-node-java-cli.sh
 mvn package
 ```
 
-Latest checked on 2026-05-14 after Maven plugin separation, single-project
-flattening, and runtime file/batch API extraction:
+Latest checked on 2026-07-02 after following upstream `devel-tiga0702vfd`
+front matter output, `sectPr` summary handling, Word comment footnotes, and
+tracked insertion / deletion markup:
 
-- `mvn test`: 46 runtime / CLI tests passed, including expected Markdown and
-  summary parity for 9 upstream fixtures.
-- `scripts/compare-node-java-cli.sh`: CLI metadata / usage errors passed, and all 9 upstream fixture verbose diagnostics, Markdown, summary, stdout Markdown, mixed summary/Markdown stdout, debug Markdown, `--include-unsupported-comments` Markdown, manifest, and asset comparisons passed.
+- `mvn test`: 65 runtime / CLI tests passed, including expected Markdown and
+  summary parity for 11 upstream fixtures.
+- `scripts/compare-node-java-cli.sh`: CLI metadata / usage errors passed, and all 11 upstream fixture verbose diagnostics, Markdown, summary, stdout Markdown, mixed summary/Markdown stdout, debug Markdown, `--include-unsupported-comments` Markdown, manifest, and asset comparisons passed.
 - `mvn package`: runtime jar, runtime sources jar, and distribution zip were
   generated.

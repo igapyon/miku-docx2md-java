@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import jp.igapyon.mikudocx2md.model.ParsedBlock;
+import jp.igapyon.mikudocx2md.model.ParsedComment;
 import jp.igapyon.mikudocx2md.model.ParsedDocx;
 import jp.igapyon.mikudocx2md.model.ParsedImageAsset;
 import jp.igapyon.mikudocx2md.xml.XmlUtils;
@@ -31,13 +32,18 @@ public class MikuDocx2mdCore {
                 documentXml,
                 files.get("word/_rels/document.xml.rels"),
                 files.get("word/styles.xml"),
-                files.get("word/numbering.xml"));
+                files.get("word/numbering.xml"),
+                files.get("word/comments.xml"));
         collectImageAssets(parsed, files, files.get("[Content_Types].xml"));
         parsed.summary.imageAssets = parsed.assets.size();
         return parsed;
     }
 
     public ParsedDocx parseDocumentXml(byte[] documentXml, byte[] relationshipsXml, byte[] stylesXml, byte[] numberingXml) {
+        return parseDocumentXml(documentXml, relationshipsXml, stylesXml, numberingXml, null);
+    }
+
+    public ParsedDocx parseDocumentXml(byte[] documentXml, byte[] relationshipsXml, byte[] stylesXml, byte[] numberingXml, byte[] commentsXml) {
         Document document = XmlUtils.parseXml(documentXml);
         Element body = firstDescendant(document, "body");
         Map<String, Relationship> relationships = relationshipsXml == null
@@ -45,7 +51,7 @@ public class MikuDocx2mdCore {
                 : parseRelationships(relationshipsXml, "word/document.xml");
         Map<String, StyleDefinition> styles = parseStyles(stylesXml);
         Numbering numbering = parseNumbering(numberingXml);
-        return parseBody(body, relationships, styles, numbering);
+        return parseBody(body, relationships, styles, numbering, parseComments(commentsXml));
     }
 
     public String renderMarkdown(ParsedDocx parsed, MarkdownOptions options) {
@@ -60,13 +66,62 @@ public class MikuDocx2mdCore {
         return AssetManifest.createAssetsManifestText(parsed.assets);
     }
 
-    private ParsedDocx parseBody(Element body, Map<String, Relationship> relationships, Map<String, StyleDefinition> styles, Numbering numbering) {
+    private List<ParsedComment> parseComments(byte[] commentsXml) {
+        List<ParsedComment> result = new ArrayList<ParsedComment>();
+        if (commentsXml == null) {
+            return result;
+        }
+        Document document = XmlUtils.parseXml(commentsXml);
+        List<Element> comments = XmlUtils.descendantsByLocalName(document, "comment");
+        for (int index = 0; index < comments.size(); index++) {
+            Element commentElement = comments.get(index);
+            ParsedComment comment = new ParsedComment();
+            comment.id = XmlUtils.attr(commentElement, "id");
+            if (comment.id.length() == 0) {
+                comment.id = String.valueOf(index);
+            }
+            comment.label = "comment-" + (index + 1);
+            comment.text = parseCommentText(commentElement);
+            if (comment.id.length() > 0 && comment.text.length() > 0) {
+                result.add(comment);
+            }
+        }
+        return result;
+    }
+
+    private String parseCommentText(Element commentElement) {
+        List<String> parts = new ArrayList<String>();
+        for (Element paragraph : XmlUtils.descendantsByLocalName(commentElement, "p")) {
+            String text = normalizeCommentText(paragraph.getTextContent());
+            if (text.length() > 0) {
+                parts.add(text);
+            }
+        }
+        return join(parts, "<br><br>");
+    }
+
+    private String normalizeCommentText(String text) {
+        return text == null ? "" : text.replaceAll("\\s+", " ").trim();
+    }
+
+    private Map<String, ParsedComment> indexComments(List<ParsedComment> comments) {
+        Map<String, ParsedComment> result = new LinkedHashMap<String, ParsedComment>();
+        for (ParsedComment comment : comments) {
+            result.put(comment.id, comment);
+        }
+        return result;
+    }
+
+    private ParsedDocx parseBody(Element body, Map<String, Relationship> relationships, Map<String, StyleDefinition> styles, Numbering numbering,
+            List<ParsedComment> comments) {
         ParsedDocx parsed = new ParsedDocx();
         if (body == null) {
             return parsed;
         }
         Set<String> knownAnchorIds = collectKnownAnchorIds(body);
         Set<String> emittedAnchorIds = new HashSet<String>();
+        Map<String, ParsedComment> commentsById = indexComments(comments);
+        Set<String> referencedCommentIds = new HashSet<String>();
         NodeList children = body.getChildNodes();
         for (int index = 0; index < children.getLength(); index++) {
             Node child = children.item(index);
@@ -77,10 +132,12 @@ public class MikuDocx2mdCore {
             String local = XmlUtils.localName(element);
             ParsedBlock block = null;
             if ("p".equals(local)) {
-                block = parseParagraph(element, relationships, styles, numbering, parsed, knownAnchorIds, emittedAnchorIds);
+                block = parseParagraph(element, relationships, styles, numbering, parsed, knownAnchorIds, emittedAnchorIds, commentsById, referencedCommentIds);
             } else if ("tbl".equals(local)) {
                 parsed.summary.tables++;
-                block = parseTable(element, relationships, styles, numbering, parsed, knownAnchorIds);
+                block = parseTable(element, relationships, styles, numbering, parsed, knownAnchorIds, commentsById, referencedCommentIds);
+            } else if ("sectPr".equals(local)) {
+                block = null;
             } else {
                 String type = describeUnsupported(element, relationships);
                 parsed.summary.recordUnsupported(type);
@@ -90,13 +147,20 @@ public class MikuDocx2mdCore {
                 parsed.blocks.add(block);
             }
         }
+        for (ParsedComment comment : comments) {
+            if (referencedCommentIds.contains(comment.id)) {
+                parsed.comments.add(comment);
+            }
+        }
         return parsed;
     }
 
     private ParsedBlock parseParagraph(Element paragraph, Map<String, Relationship> relationships, Map<String, StyleDefinition> styles,
-            Numbering numbering, ParsedDocx parsed, Set<String> knownAnchorIds, Set<String> emittedAnchorIds) {
+            Numbering numbering, ParsedDocx parsed, Set<String> knownAnchorIds, Set<String> emittedAnchorIds,
+            Map<String, ParsedComment> commentsById, Set<String> referencedCommentIds) {
         List<String> unsupported = new ArrayList<String>();
-        String text = extractTextRuns(paragraph, relationships, styles, numbering, parsed, knownAnchorIds, unsupported, getParagraphTextStyle(paragraph, styles), false);
+        String text = extractTextRuns(paragraph, relationships, styles, numbering, parsed, knownAnchorIds, unsupported, getParagraphTextStyle(paragraph, styles), false,
+                commentsById, referencedCommentIds);
         if (text.length() == 0) {
             return unsupported.isEmpty() ? null : ParsedBlock.unsupported(unsupported.get(0));
         }
@@ -122,7 +186,8 @@ public class MikuDocx2mdCore {
     }
 
     private ParsedBlock parseTable(Element table, Map<String, Relationship> relationships, Map<String, StyleDefinition> styles,
-            Numbering numbering, ParsedDocx parsed, Set<String> knownAnchorIds) {
+            Numbering numbering, ParsedDocx parsed, Set<String> knownAnchorIds,
+            Map<String, ParsedComment> commentsById, Set<String> referencedCommentIds) {
         List<List<String>> rows = new ArrayList<List<String>>();
         List<String> unsupported = new ArrayList<String>();
         for (Element rowElement : XmlUtils.childrenByLocalName(table, "tr")) {
@@ -130,7 +195,7 @@ public class MikuDocx2mdCore {
             for (Element cellElement : XmlUtils.childrenByLocalName(rowElement, "tc")) {
                 int span = getGridSpan(cellElement);
                 String verticalMerge = getVerticalMergeState(cellElement);
-                String text = extractCellText(cellElement, relationships, styles, numbering, parsed, knownAnchorIds, unsupported);
+                String text = extractCellText(cellElement, relationships, styles, numbering, parsed, knownAnchorIds, unsupported, commentsById, referencedCommentIds);
                 if ("continue".equals(verticalMerge)) {
                     for (int index = 0; index < span; index++) {
                         row.add(index == 0 ? "↑M↑" : "←M←");
@@ -151,10 +216,12 @@ public class MikuDocx2mdCore {
     }
 
     private String extractCellText(Element cell, Map<String, Relationship> relationships, Map<String, StyleDefinition> styles,
-            Numbering numbering, ParsedDocx parsed, Set<String> knownAnchorIds, List<String> unsupported) {
+            Numbering numbering, ParsedDocx parsed, Set<String> knownAnchorIds, List<String> unsupported,
+            Map<String, ParsedComment> commentsById, Set<String> referencedCommentIds) {
         List<String> parts = new ArrayList<String>();
         for (Element paragraph : XmlUtils.childrenByLocalName(cell, "p")) {
-            String text = extractTextRuns(paragraph, relationships, styles, numbering, parsed, knownAnchorIds, unsupported, getParagraphTextStyle(paragraph, styles), false);
+            String text = extractTextRuns(paragraph, relationships, styles, numbering, parsed, knownAnchorIds, unsupported, getParagraphTextStyle(paragraph, styles), false,
+                    commentsById, referencedCommentIds);
             if (text.length() > 0) {
                 parts.add(renderStructuredParagraphText(paragraph, text, styles, numbering));
             }
@@ -164,7 +231,7 @@ public class MikuDocx2mdCore {
 
     private String extractTextRuns(Element parent, Map<String, Relationship> relationships, Map<String, StyleDefinition> styles,
             Numbering numbering, ParsedDocx parsed, Set<String> knownAnchorIds, List<String> unsupported, TextStyle inheritedStyle,
-            boolean suppressUnderline) {
+            boolean suppressUnderline, Map<String, ParsedComment> commentsById, Set<String> referencedCommentIds) {
         List<String> pieces = new ArrayList<String>();
         NodeList children = parent.getChildNodes();
         for (int index = 0; index < children.getLength(); index++) {
@@ -175,19 +242,27 @@ public class MikuDocx2mdCore {
             Element element = (Element) child;
             String local = XmlUtils.localName(element);
             if ("r".equals(local)) {
-                pieces.add(renderRun(element, relationships, styles, parsed, unsupported, inheritedStyle, suppressUnderline));
+                pieces.add(renderRun(element, relationships, styles, parsed, unsupported, inheritedStyle, suppressUnderline, commentsById, referencedCommentIds));
             } else if ("hyperlink".equals(local)) {
-                String linkText = extractTextRuns(element, relationships, styles, numbering, parsed, knownAnchorIds, unsupported, inheritedStyle, true);
+                String linkText = extractTextRuns(element, relationships, styles, numbering, parsed, knownAnchorIds, unsupported, inheritedStyle, true,
+                        commentsById, referencedCommentIds);
                 pieces.add(renderHyperlink(element, linkText, relationships, parsed, knownAnchorIds));
             } else if ("txbxContent".equals(local)) {
-                String textbox = extractTextboxText(element, relationships, styles, numbering, parsed, knownAnchorIds, unsupported);
+                String textbox = extractTextboxText(element, relationships, styles, numbering, parsed, knownAnchorIds, unsupported, commentsById, referencedCommentIds);
                 if (textbox.length() > 0) {
                     if (!pieces.isEmpty()) {
                         pieces.add("<br><br>");
                     }
                     pieces.add(textbox);
                 }
-            } else if ("bookmarkStart".equals(local) || "bookmarkEnd".equals(local) || "pPr".equals(local) || "proofErr".equals(local)) {
+            } else if ("ins".equals(local)) {
+                pieces.add(renderTrackedChange(element, "inserted", relationships, styles, numbering, parsed, knownAnchorIds, unsupported, inheritedStyle, suppressUnderline,
+                        commentsById, referencedCommentIds));
+            } else if ("del".equals(local)) {
+                pieces.add(renderTrackedChange(element, "deleted", relationships, styles, numbering, parsed, knownAnchorIds, unsupported, inheritedStyle, suppressUnderline,
+                        commentsById, referencedCommentIds));
+            } else if ("bookmarkStart".equals(local) || "bookmarkEnd".equals(local) || "pPr".equals(local) || "proofErr".equals(local)
+                    || "commentRangeStart".equals(local) || "commentRangeEnd".equals(local)) {
                 continue;
             } else {
                 recordUnsupportedTrace(parsed, unsupported, describeUnsupported(element, relationships));
@@ -197,7 +272,8 @@ public class MikuDocx2mdCore {
     }
 
     private String renderRun(Element run, Map<String, Relationship> relationships, Map<String, StyleDefinition> styles,
-            ParsedDocx parsed, List<String> unsupported, TextStyle inheritedStyle, boolean suppressUnderline) {
+            ParsedDocx parsed, List<String> unsupported, TextStyle inheritedStyle, boolean suppressUnderline,
+            Map<String, ParsedComment> commentsById, Set<String> referencedCommentIds) {
         TextStyle style = resolveRunTextStyle(run, styles, inheritedStyle, suppressUnderline);
         List<String> pieces = new ArrayList<String>();
         NodeList children = run.getChildNodes();
@@ -208,10 +284,12 @@ public class MikuDocx2mdCore {
             }
             Element element = (Element) child;
             String local = XmlUtils.localName(element);
-            if ("t".equals(local)) {
+            if ("t".equals(local) || "delText".equals(local)) {
                 pieces.add(applyTextStyle(element.getTextContent(), style));
             } else if ("br".equals(local)) {
                 pieces.add("<br>");
+            } else if ("commentReference".equals(local)) {
+                pieces.add(renderCommentReference(element, parsed, unsupported, commentsById, referencedCommentIds));
             } else if ("drawing".equals(local) || "pict".equals(local) || "object".equals(local)) {
                 recordUnsupportedTrace(parsed, unsupported, describeUnsupported(element, relationships));
             }
@@ -219,11 +297,36 @@ public class MikuDocx2mdCore {
         return join(pieces, "");
     }
 
+    private String renderTrackedChange(Element changeElement, String marker, Map<String, Relationship> relationships, Map<String, StyleDefinition> styles,
+            Numbering numbering, ParsedDocx parsed, Set<String> knownAnchorIds, List<String> unsupported, TextStyle inheritedStyle, boolean suppressUnderline,
+            Map<String, ParsedComment> commentsById, Set<String> referencedCommentIds) {
+        String text = extractTextRuns(changeElement, relationships, styles, numbering, parsed, knownAnchorIds, unsupported, inheritedStyle, suppressUnderline,
+                commentsById, referencedCommentIds);
+        if (text.length() == 0) {
+            return "";
+        }
+        return "inserted".equals(marker) ? "<ins>" + text + "</ins>" : "~~" + text + "~~";
+    }
+
+    private String renderCommentReference(Element commentReference, ParsedDocx parsed, List<String> unsupported,
+            Map<String, ParsedComment> commentsById, Set<String> referencedCommentIds) {
+        String id = XmlUtils.attr(commentReference, "id");
+        ParsedComment comment = commentsById.get(id);
+        if (comment == null) {
+            recordUnsupportedTrace(parsed, unsupported, "commentReference");
+            return "";
+        }
+        referencedCommentIds.add(id);
+        return "[^" + comment.label + "]";
+    }
+
     private String extractTextboxText(Element textbox, Map<String, Relationship> relationships, Map<String, StyleDefinition> styles,
-            Numbering numbering, ParsedDocx parsed, Set<String> knownAnchorIds, List<String> unsupported) {
+            Numbering numbering, ParsedDocx parsed, Set<String> knownAnchorIds, List<String> unsupported,
+            Map<String, ParsedComment> commentsById, Set<String> referencedCommentIds) {
         List<String> parts = new ArrayList<String>();
         for (Element paragraph : XmlUtils.childrenByLocalName(textbox, "p")) {
-            String text = extractTextRuns(paragraph, relationships, styles, numbering, parsed, knownAnchorIds, unsupported, getParagraphTextStyle(paragraph, styles), false);
+            String text = extractTextRuns(paragraph, relationships, styles, numbering, parsed, knownAnchorIds, unsupported, getParagraphTextStyle(paragraph, styles), false,
+                    commentsById, referencedCommentIds);
             if (text.length() > 0) {
                 parts.add(renderStructuredParagraphText(paragraph, text, styles, numbering));
             }

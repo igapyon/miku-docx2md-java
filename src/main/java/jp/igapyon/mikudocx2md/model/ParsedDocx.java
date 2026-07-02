@@ -7,4 +7,5 @@ public class ParsedDocx {
     public List<ParsedBlock> blocks = new ArrayList<ParsedBlock>();
     public ParsedSummary summary = new ParsedSummary();
     public List<ParsedImageAsset> assets = new ArrayList<ParsedImageAsset>();
+    public List<ParsedComment> comments = new ArrayList<ParsedComment>();
 }
